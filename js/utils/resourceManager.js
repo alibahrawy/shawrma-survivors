@@ -18,15 +18,17 @@ export class ResourceManager {
 
     async loadAll() {
         const promises = Object.entries(this.assetManifest).map(([key, path]) => {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
                     this.images[key] = img;
+                    console.log(`Loaded: ${key}`);
                     resolve();
                 };
                 img.onerror = () => {
-                    console.error(`Failed to load asset: ${path}`);
-                    reject(`Failed to load asset: ${path}`);
+                    // Don't reject - just log warning and continue with fallback rendering
+                    console.warn(`Asset not found (using fallback): ${path}`);
+                    resolve();
                 };
                 img.src = path;
             });
