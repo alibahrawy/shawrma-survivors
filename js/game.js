@@ -6,6 +6,7 @@ import { UpgradeSystem } from './systems/upgradeSystem.js';
 import { DifficultySystem } from './systems/difficultySystem.js';
 import { MagicMissile } from './weapons/magicMissile.js';
 import { sound } from './systems/soundSystem.js';
+import { resources } from './utils/resourceManager.js';
 
 export class Game {
     constructor(canvas) {
@@ -227,8 +228,8 @@ export class Game {
         this.ctx.fillStyle = '#1a1a2e';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw grid
-        this.renderGrid();
+        // Draw grid/background
+        this.renderBackground();
 
         // Draw XP gems
         for (const gem of this.xpGems) {
@@ -262,28 +263,35 @@ export class Game {
         }
     }
 
-    renderGrid() {
-        const gridSize = 100;
-        const offsetX = -this.camera.x % gridSize;
-        const offsetY = -this.camera.y % gridSize;
+    renderBackground() {
+        const floorImg = resources.getImage('floor_tile');
+        if (!floorImg) return;
 
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-        this.ctx.lineWidth = 1;
+        const tileSize = 64; // Assuming 64x64 or scaling to it. Our generated one might be different, let's assume it fits well or scale it.
+        // Actually, the generated image size isn't guaranteed. Let's draw it as is.
+        // But for pixel art, usually we want crisp scaling.
+        // Let's assume standard tile size or use the image natural size.
+        const width = floorImg.width;
+        const height = floorImg.height;
 
-        // Vertical lines
-        for (let x = offsetX; x < this.canvas.width; x += gridSize) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, this.canvas.height);
-            this.ctx.stroke();
-        }
+        const offsetX = -this.camera.x % width;
+        const offsetY = -this.camera.y % height;
 
-        // Horizontal lines
-        for (let y = offsetY; y < this.canvas.height; y += gridSize) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, y);
-            this.ctx.lineTo(this.canvas.width, y);
-            this.ctx.stroke();
+        // Calculate how many tiles we need to cover the screen plus buffer
+        const cols = Math.ceil(this.canvas.width / width) + 1;
+        const rows = Math.ceil(this.canvas.height / height) + 1;
+
+        // Ensure crisp pixel art rendering (should be set in context globally, but confirming here)
+        this.ctx.imageSmoothingEnabled = false;
+
+        for (let y = -1; y < rows; y++) {
+            for (let x = -1; x < cols; x++) {
+                this.ctx.drawImage(
+                    floorImg,
+                    offsetX + x * width,
+                    offsetY + y * height
+                );
+            }
         }
     }
 

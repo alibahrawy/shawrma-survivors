@@ -1,4 +1,5 @@
 import { Entity } from './entity.js';
+import { resources } from '../utils/resourceManager.js';
 
 export class Projectile extends Entity {
     constructor(x, y, config) {
@@ -52,35 +53,64 @@ export class Projectile extends Entity {
         const screenX = this.position.x - camera.x;
         const screenY = this.position.y - camera.y;
 
-        // Trail effect
-        const trailLength = 3;
-        const velNorm = this.velocity.normalize();
-        for (let i = trailLength; i > 0; i--) {
-            const trailX = screenX - velNorm.x * i * 4;
-            const trailY = screenY - velNorm.y * i * 4;
-            const alpha = (1 - i / trailLength) * 0.3;
-            ctx.fillStyle = this.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+        const sprite = resources.getImage(this.weaponId || 'magic_missile');
+
+        if (sprite) {
+            const angle = this.velocity.angle();
+            const size = this.radius * 4; // Scale up
+
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.rotate(angle);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+            ctx.restore();
+
+            // Trail effect (optional, maybe keep it but subtle?)
+            // Keeping it creates a nice mix of retro + modern particles
+            const trailLength = 3;
+            const velNorm = this.velocity.normalize();
+            for (let i = trailLength; i > 0; i--) {
+                const trailX = screenX - velNorm.x * i * 4;
+                const trailY = screenY - velNorm.y * i * 4;
+                const alpha = (1 - i / trailLength) * 0.2; // reduced opacity
+                ctx.fillStyle = this.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+                ctx.beginPath();
+                ctx.arc(trailX, trailY, this.radius * (1 - i * 0.15), 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+        } else {
+            // Trail effect
+            const trailLength = 3;
+            const velNorm = this.velocity.normalize();
+            for (let i = trailLength; i > 0; i--) {
+                const trailX = screenX - velNorm.x * i * 4;
+                const trailY = screenY - velNorm.y * i * 4;
+                const alpha = (1 - i / trailLength) * 0.3;
+                ctx.fillStyle = this.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+                ctx.beginPath();
+                ctx.arc(trailX, trailY, this.radius * (1 - i * 0.15), 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Glow
+            ctx.fillStyle = this.color + '60';
             ctx.beginPath();
-            ctx.arc(trailX, trailY, this.radius * (1 - i * 0.15), 0, Math.PI * 2);
+            ctx.arc(screenX, screenY, this.radius + 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(screenX - 2, screenY - 2, this.radius * 0.4, 0, Math.PI * 2);
             ctx.fill();
         }
-
-        // Glow
-        ctx.fillStyle = this.color + '60';
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, this.radius + 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Core
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Highlight
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.beginPath();
-        ctx.arc(screenX - 2, screenY - 2, this.radius * 0.4, 0, Math.PI * 2);
-        ctx.fill();
     }
 }

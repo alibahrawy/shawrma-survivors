@@ -1,5 +1,6 @@
 import { Entity } from './entity.js';
 import { Vector2 } from '../utils/vector.js';
+import { resources } from '../utils/resourceManager.js';
 
 export class XPGem extends Entity {
     constructor(x, y, value = 1) {
@@ -68,26 +69,45 @@ export class XPGem extends Entity {
         const screenX = this.position.x - camera.x;
         const screenY = this.position.y - camera.y + Math.sin(this.bobTime + this.bobOffset) * 3;
 
-        // Glow
-        ctx.fillStyle = this.color + '40'; // 25% opacity
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, this.radius + 4, 0, Math.PI * 2);
-        ctx.fill();
+        let spriteKey = 'gem_green';
+        if (this.xpValue >= 10) spriteKey = 'gem_pink';
+        else if (this.xpValue >= 5) spriteKey = 'gem_blue';
 
-        // Diamond shape
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.moveTo(screenX, screenY - this.radius);
-        ctx.lineTo(screenX + this.radius * 0.7, screenY);
-        ctx.lineTo(screenX, screenY + this.radius);
-        ctx.lineTo(screenX - this.radius * 0.7, screenY);
-        ctx.closePath();
-        ctx.fill();
+        const sprite = resources.getImage(spriteKey);
 
-        // Shine
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.beginPath();
-        ctx.arc(screenX - 2, screenY - 3, this.radius * 0.25, 0, Math.PI * 2);
-        ctx.fill();
+        if (sprite) {
+            const size = this.radius * 3; // Scale
+            ctx.imageSmoothingEnabled = false;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(screenX, screenY + size / 2 - 2, size / 3, size / 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.drawImage(sprite, screenX - size / 2, screenY - size / 2, size, size);
+        } else {
+            // Glow
+            ctx.fillStyle = this.color + '40'; // 25% opacity
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, this.radius + 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Diamond shape
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.moveTo(screenX, screenY - this.radius);
+            ctx.lineTo(screenX + this.radius * 0.7, screenY);
+            ctx.lineTo(screenX, screenY + this.radius);
+            ctx.lineTo(screenX - this.radius * 0.7, screenY);
+            ctx.closePath();
+            ctx.fill();
+
+            // Shine
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.arc(screenX - 2, screenY - 3, this.radius * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }

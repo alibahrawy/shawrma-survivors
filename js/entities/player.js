@@ -1,5 +1,6 @@
 import { Entity } from './entity.js';
 import { Vector2 } from '../utils/vector.js';
+import { resources } from '../utils/resourceManager.js';
 
 export class Player extends Entity {
     constructor(x, y) {
@@ -123,45 +124,86 @@ export class Player extends Entity {
         const screenX = this.position.x - camera.x;
         const screenY = this.position.y - camera.y;
 
-        // Draw pickup radius indicator (faint circle)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        // Draw pickup radius indicator (faint circle) - keep this as debug/gameplay aid?
+        // Maybe make it very faint or remove it for better visuals. User said "pixelated graphics", maybe circle is okay or just remove.
+        // I'll keep it very faint as it's useful.
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(screenX, screenY, this.getEffectivePickupRadius(), 0, Math.PI * 2);
         ctx.stroke();
 
-        // Body - flash white when hit, blink when invincible
-        let bodyColor = this.color;
-        if (this.flashTime > 0) {
-            bodyColor = '#FFFFFF';
-        } else if (this.invincibilityTime > 0) {
-            // Blink effect
-            bodyColor = Math.floor(this.invincibilityTime * 10) % 2 === 0 ? this.color : '#88FF88';
+        const sprite = resources.getImage('player');
+        if (sprite) {
+            // Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(screenX, screenY + 12, 10, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Determine orientation
+            const isFlipped = this.velocity.x < 0; // Flip if moving left
+            // Preserve finding facing direction if idle? 
+            // We can add a property lastFoundFacing to keep consistent
+            if (this.velocity.x !== 0) {
+                this.facingLeft = this.velocity.x < 0;
+            }
+
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            if (this.facingLeft) {
+                ctx.scale(-1, 1);
+            }
+
+            // Draw centered
+            // Assuming sprite is roughly 32x32 or 48x48. 
+            // We can scale it to match hitbox size (radius 18 -> diameter 36)
+            // Let's assume the sprite is meant to be drawn at scale 2 or similar for pixel art feel.
+            const size = 64;
+            ctx.imageSmoothingEnabled = false; // Ensure pixelated
+
+            // Flash effect
+            if (this.flashTime > 0) {
+                ctx.globalCompositeOperation = 'source-atop';
+                ctx.fillStyle = 'white';
+                // Drawing a white silhouette is hard with generic drawImage.
+                // We can use filter brightness if supported or just skip flash for now, 
+                // or accept standard draw.
+                // Simplest flash: don't draw or blink.
+                if (Math.floor(Date.now() / 50) % 2 === 0) {
+                    ctx.globalAlpha = 0.5;
+                }
+            } else if (this.invincibilityTime > 0) {
+                if (Math.floor(this.invincibilityTime * 10) % 2 === 0) {
+                    ctx.globalAlpha = 0.5;
+                }
+            }
+
+            ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+            ctx.restore();
+
+        } else {
+            // Fallback
+            // Body - flash white when hit, blink when invincible
+            let bodyColor = this.color;
+            if (this.flashTime > 0) {
+                bodyColor = '#FFFFFF';
+            } else if (this.invincibilityTime > 0) {
+                // Blink effect
+                bodyColor = Math.floor(this.invincibilityTime * 10) % 2 === 0 ? this.color : '#88FF88';
+            }
+
+            // Outer glow
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, this.radius + 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Main body
+            ctx.fillStyle = bodyColor;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+            ctx.fill();
         }
-
-        // Outer glow
-        ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, this.radius + 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Main body
-        ctx.fillStyle = bodyColor;
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Inner highlight
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.beginPath();
-        ctx.arc(screenX - 5, screenY - 5, this.radius * 0.4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Border
-        ctx.strokeStyle = '#2E7D32';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
-        ctx.stroke();
     }
 }
