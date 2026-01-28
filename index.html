@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shawrma Survivors</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="hud-left">
+                <div id="health-container">
+                    <div id="health-bar"></div>
+                    <span id="health-text">100/100</span>
+                </div>
+                <div id="xp-container">
+                    <div id="xp-bar"></div>
+                    <span id="xp-text">0/10</span>
+                </div>
+            </div>
+            <div id="hud-center">
+                <span id="timer">00:00</span>
+            </div>
+            <div id="hud-right">
+                <span id="level">Level 1</span>
+                <div id="weapons-display"></div>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="overlay">
+            <h1>Shawrma Survivors</h1>
+            <p>Survive the endless hordes!</p>
+            <button id="start-button">START GAME</button>
+            <div class="controls-info">
+                <p>WASD or Arrow Keys to move</p>
+                <p>Weapons fire automatically</p>
+                <p>Collect gems to level up</p>
+            </div>
+        </div>
+
+        <!-- Level Up Screen -->
+        <div id="levelup-screen" class="overlay hidden">
+            <h2>LEVEL UP!</h2>
+            <p>Choose an upgrade:</p>
+            <div id="upgrade-choices"></div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="overlay hidden">
+            <h2>GAME OVER</h2>
+            <div id="final-stats">
+                <p>Survived: <span id="final-time">00:00</span></p>
+                <p>Level: <span id="final-level">1</span></p>
+                <p>Enemies Killed: <span id="final-kills">0</span></p>
+            </div>
+            <button id="restart-button">PLAY AGAIN</button>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="overlay hidden">
+            <h2>PAUSED</h2>
+            <p>Press ESC to resume</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
